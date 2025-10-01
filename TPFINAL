@@ -1,0 +1,530 @@
+using System.IO;
+using System.Windows;
+using System.Collections.Generic;
+using System;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.ComponentModel.Design;
+
+
+namespace UTN
+{
+
+    class Alumno
+    {
+        public int Indice { get; set; }
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string DNI { get; set; }
+        public DateTime Nacimiento { get; set; }
+        public string Domicilio { get; set; }
+        public bool Activo { get; set; }
+        public int IndiceMateria { get; set; }
+        public string NombreMateria { get; set; }
+        public bool EstaActiva { get; set; }
+        public bool Estado { get; set; }
+        public int Nota { get; set; }
+        public DateTime Fecha { get; set; }
+        public int Indice2 { get; set; }
+    }
+
+
+
+
+    internal class Program
+    {
+
+
+        static List<Alumno> alumnos = new List<Alumno>();
+
+
+
+        static string rutaArchivo = "Alumno.txt";
+        TextWriter archivo = new StreamWriter("Alumno.txt");//Archivos de Los Alumnos
+        static string rutaArchivo2 = "Materias.txt";
+        TextWriter archivo2 = new StreamWriter("Materias.txt");//Archivos de las Materias
+        static string rutaArchivo3 = "AlumnoMaterias.txt";
+        TextWriter archivo3 = new StreamWriter("AulmnoMaterias.txt");//Archivos de las Materias y Alumnos
+
+
+
+
+
+        static void Main(string[] args)
+        {
+
+
+            CargarDatos();
+
+            bool esvalido = false;
+
+            while (!esvalido)//Menu de inicio
+            {
+
+                Console.WriteLine("Menu de inicio UTN ");
+                Console.WriteLine("1. Ingresar nuevo alumno");
+                Console.WriteLine("2. Dar de Baja a un alumno");
+                Console.WriteLine("3. Modificar un alumno");
+                Console.WriteLine("4. Alumnos Activos");
+                Console.WriteLine("5. Alumnos Inactivos");
+                Console.WriteLine("6. Ingresa para ver las materias");
+                Console.Write("Ingrese una Opcion: ");
+
+                string numero = Console.ReadLine();
+
+
+                switch (numero)//Llama las opciones seguen el numero
+                {
+
+                    case "1":
+                        AltadeAlumno();
+                        break;
+                    case "2":
+                        BajarAlumno();
+                        break;
+                    case "3":
+                        ModificarAlumno();
+                        break;
+                    case "4":
+                        AlumnosActivos(true);
+                        break;
+                    case "5":
+                        AlumnosActivos(false);
+                        break;
+                    case "6":
+                        MenuMaterias();
+                        break;
+                    default:
+                        Console.WriteLine("La Opcion ingresada no es valida: ");
+                        break;
+
+
+
+
+                }
+            }
+        }
+       
+        static void GuardarDatosAlumnos()//Carga los datos de los alumnos en alumnos.txt
+        {
+            try
+            {
+                using (StreamWriter escritor = new StreamWriter(rutaArchivo))
+                {
+                    foreach (var alumno in alumnos)
+                    {
+                        escritor.WriteLine($"{alumno.Indice},{alumno.Nombre},{alumno.Apellido},{alumno.DNI},{alumno.Nacimiento},{alumno.Domicilio},{alumno.Activo}");
+                    }
+                }
+                Console.WriteLine("Datos de alumnos guardados correctamente en el archivo.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar los datos de los alumnos: {ex.Message}");
+            }
+        }
+
+        static void GuardarDatosMaterias()//Carga datos de la materias en Materias.txt
+        {
+            try
+            {
+                using (StreamWriter escritor = new StreamWriter(rutaArchivo2))
+                {
+                    foreach (var materia in alumnos)
+                    {
+                        escritor.WriteLine($"Indice: {materia.IndiceMateria}, Materia: {materia.NombreMateria}, EstaActiva: {materia.EstaActiva}");
+                    }
+                }
+                Console.WriteLine("Datos de materias guardados correctamente en el archivo.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar los datos de las materias: {ex.Message}");
+            }
+        }
+
+        static void GuardarDatosAlumnos_Materias()//Carga datos de los alumnos y materias en AlumnosMaterias.txt
+        {
+            try
+            {
+                // Metodo burbuja para ordenar
+                for (int i = 0; i < alumnos.Count - 1; i++)
+                {
+                    for (int j = 0; j < alumnos.Count - 1 - i; j++)
+                    {
+                        if (alumnos[j].Indice2 > alumnos[j + 1].Indice2)
+                        {
+                            // Intercambiar elementos
+                            Alumno temp = alumnos[j];
+                            alumnos[j] = alumnos[j + 1];
+                            alumnos[j + 1] = temp;
+                        }
+                    }
+                }
+
+                
+                using (StreamWriter escritor = new StreamWriter(rutaArchivo3))// Escribir los datos ordenados en el archivo
+                {
+                    foreach (var alumnomaterias in alumnos)
+                    {
+                        
+                        string fechaFormateada = alumnomaterias.Fecha.ToString("dd/MM/yyyy HH:mm:ss");// Fecha exacta
+
+                        escritor.WriteLine($"{alumnomaterias.Indice2},{alumnomaterias.Indice},{alumnomaterias.IndiceMateria},{alumnomaterias.Estado},{alumnomaterias.Nota},{fechaFormateada}");
+                    }
+                }
+
+                Console.WriteLine("Datos de alumnos y materias guardados correctamente en el archivo.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar los datos de alumnos y materias: {ex.Message}");
+            }
+        }
+        static void CargarDatos()
+        {
+            if (File.Exists(rutaArchivo))//Verifica que exista el archivo
+            {
+                using (StreamReader reader = new StreamReader(rutaArchivo))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        string[] datos = line.Split(',');
+                        alumnos.Add(new Alumno
+                        {
+                            Indice = int.Parse(datos[0]),
+                            Nombre = datos[1],
+                            Apellido = datos[2],
+                            DNI = datos[3],
+                            Nacimiento = DateTime.Parse(datos[4]),
+                            Domicilio = datos[5],
+                            Activo = bool.Parse(datos[6])
+                        });
+                    }
+                }
+            }
+        }
+        static void AltadeAlumno()//Pide los datos del nuevo alumno
+        {
+            Console.WriteLine("Nombre del Alumno: ");
+            string nombre = Console.ReadLine();
+
+            Console.WriteLine("Apellido del Alumno: ");
+            string apellido = Console.ReadLine();
+            Console.WriteLine("DNI: ");
+            string dni = Console.ReadLine();
+            if (ExisteDni(dni))//Verifica si ya hay alguien con ese documento (llama al metodo).
+            {
+                Console.WriteLine("Ya hay alguien ingresado con este DNI: ");
+                return;
+            }
+            Console.WriteLine("Fecha de Nacimiento (--/--/----): ");
+            DateTime nacimiento;
+            if (!DateTime.TryParse(Console.ReadLine(), out nacimiento))
+            {
+                Console.WriteLine("Fecha inválida");//La fecha no es valida con el año que estamos.
+                return;
+            }
+            Console.WriteLine("Domicilio: ");
+            string domicilio = Console.ReadLine();
+
+            Alumno nuevoAlumno = new Alumno//Datos de los nuevos alumnos.
+            {
+                Indice = alumnos.Count + 1,
+                Nombre = nombre,
+                Apellido = apellido,
+                DNI = dni,
+                Nacimiento = nacimiento,
+                Domicilio = domicilio,
+                Activo = true
+            };
+            alumnos.Add(nuevoAlumno);
+            GuardarDatosAlumnos();
+            GuardarDatosAlumnos_Materias();
+            Console.WriteLine("Alumno agregado exitosamente.");
+        }
+        static bool ExisteDni(string dni)//Existe el DNI ingresado
+        {
+            return alumnos.Exists(activo => activo.DNI == dni && activo.Activo);
+        }
+        static void BajarAlumno()//Da de baja al alumno que desee.
+        {
+            Console.WriteLine("Ingrese el DNI del alumno que desea dar de baja: ");
+
+            string dni = Console.ReadLine();
+            Alumno alumno = alumnos.Find(activo => activo.DNI == dni && activo.Activo);
+
+            if (alumno != null)
+            {
+                alumno.Activo = false;
+                Console.WriteLine("El alumno fue dado de Baja.");
+                GuardarDatosAlumnos();
+                GuardarDatosAlumnos_Materias();
+            }
+            else
+            {
+                Console.WriteLine("No hay ningun alumno con esos Datos.");
+            }
+
+        }
+        static void ModificarAlumno()//Modifica los datos que el alumno desee.
+        {
+            Console.WriteLine("Ingrese el DNI del alumno que desea Modificar: ");
+
+            string dni = Console.ReadLine();
+             Alumno alumno = alumnos.FirstOrDefault(a => a.DNI == dni && a.Activo);
+            if (alumno == null)
+            {
+                Console.WriteLine("No hay ningun Alumno activo con ese DNI.");
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Ingrese sus datos de vuelta y lo que desea modificar: ");
+                Console.WriteLine("1. Nombre: ");
+                string nombre = Console.ReadLine();
+                Console.WriteLine("2. Apellido: ");
+                string apellido = Console.ReadLine();
+                Console.WriteLine("3. DNI: ");
+                string Dni = Console.ReadLine();
+                Console.WriteLine("4. Fecha de Nacimiento: ");
+                string fde = Console.ReadLine();
+                Console.WriteLine("5. Domicilio: ");
+                string domicilio = Console.ReadLine();
+                Console.WriteLine("Sus datos se han modificado correctamente.");
+                
+            }
+            GuardarDatosAlumnos();
+            GuardarDatosAlumnos_Materias();
+        }
+        static void AlumnosActivos(bool activos)//Verifica si los alumnos estan activos o inactivos.
+        {
+            var alumnosActivos = activos ? alumnos.FindAll(a => a.Activo) : alumnos.FindAll(a => !a.Activo);
+
+            if (alumnosActivos.Count == 0)
+            {
+                Console.WriteLine(activos ? "No hay alumnos activos." : "No hay alumnos inactivos.");
+                return;
+            }
+
+            Console.WriteLine(activos ? "Alumnos activos:" : "Alumnos inactivos:");
+            foreach (var alumno in alumnosActivos)
+            {
+                Console.WriteLine($"Indice: {alumno.Indice}, Nombre: {alumno.Nombre}, Apellido: {alumno.Apellido}, DNI: {alumno.DNI}, Fecha de Nacimiento: {alumno.Nacimiento}, Domicilio: {alumno.Domicilio}");
+            }
+            GuardarDatosAlumnos();
+            GuardarDatosAlumnos_Materias();
+
+        }
+        static void MenuMaterias()//Ingresa al menu de materias.
+        {
+            Console.WriteLine("Ingrese su numero de documento: ");
+            string dni = Console.ReadLine();
+            Alumno alumno = alumnos.Find(activo => activo.DNI == dni && activo.Activo);
+            if (alumno != null)
+            {
+                Console.WriteLine("Materias:  ");
+                Console.WriteLine("1. Inscribirse en una materia: ");
+                Console.WriteLine("2. Darte de baja en una materia: ");
+                Console.WriteLine("3. Modificar una materia: ");
+                Console.WriteLine("4. Materias Activas: ");
+                Console.WriteLine("5. Materias Inactivas: ");
+
+                Console.Write("Ingrese una Opcion: ");
+
+                string opcion = Console.ReadLine();
+                switch (opcion)
+                {
+                    case "1":
+                        Inscripcion();
+                        break;
+                    case "2":
+                        BajaMateria();
+                        break;
+                    case "3":
+                        ModicarMateria();
+                        break;
+                    case "4":
+                        MateriasActivas(true);
+                        break;
+                    case "5":
+                        MateriasActivas(false);
+                        break;
+                    default:
+                        Console.WriteLine("Error: La opcion no es correcta. ");
+                        break;
+                }
+
+            }
+            else
+            {
+                Console.WriteLine("No hay ningun Alumno con ese documento. ");
+            }
+
+
+
+
+        }
+        static void Inscripcion()
+        {
+            Console.WriteLine("Ingrese el nombre de la materia que desee inscribirse: ");
+            string nombreMateria = Console.ReadLine();
+
+
+            if (MateriaYaInscrita(nombreMateria))// Verifica si ya estas inscrito en la materia
+            {
+                Console.WriteLine("Ya estás inscrito en esta materia.");
+                return;
+            }
+
+            Alumno nuevaMateria = new Alumno//Se inscribe en la materia
+            {
+                IndiceMateria = alumnos.Count + 1,
+                NombreMateria = nombreMateria,
+                EstaActiva = true,
+
+            };
+
+
+            alumnos.Add(nuevaMateria);//Agrega la materia
+            GuardarDatosMaterias();
+            GuardarDatosAlumnos_Materias();
+            Console.WriteLine("Materia agregada exitosamente.");
+        }
+
+        static bool MateriaYaInscrita(string nombreMateria)
+        {
+
+            foreach (var materia in alumnos)//Se fija si ya existe esa materia
+            {
+                if (materia.NombreMateria == nombreMateria)
+                {
+                    return true;
+                }
+            }
+            return false;
+
+
+
+        }
+
+        static void BajaMateria()
+        {
+            if (alumnos.Count == 0)
+            {
+                Console.WriteLine("No hay materias para eliminar.");
+                return;
+            }
+
+            Console.Write("Ingrese la materia que desea eliminar: ");
+            int indice = int.Parse(Console.ReadLine());
+
+            Alumno materiass = alumnos.Find(m => m.IndiceMateria == indice);
+            if (alumnos != null)
+            {
+                alumnos.Remove(materiass);
+
+
+                Console.WriteLine("Materia eliminada correctamente.");
+            }
+            else
+            {
+                Console.WriteLine("Error: No se encontró la materia con ese índice.");
+            }
+
+            GuardarDatosMaterias();
+            GuardarDatosAlumnos_Materias();
+
+        }
+        static void ModicarMateria()
+        {
+            if (alumnos.Count == 0)
+            {
+                Console.WriteLine("No hay materias para modificar.");
+                return;
+            }
+
+            Console.Write("Ingrese el índice de la materia a modificar: ");
+            int indice = int.Parse(Console.ReadLine());
+
+            Alumno materiass = alumnos.Find(m => m.IndiceMateria == indice);
+            if (materiass != null)
+            {
+                Console.Write("Ingrese el nuevo nombre de la materia: ");
+                materiass.NombreMateria = Console.ReadLine();
+                Console.Write("¿Está activa? 1. Si, 2. No. : ");
+
+                materiass.EstaActiva = Console.ReadLine() == "1";
+                GuardarDatosMaterias();
+                GuardarDatosAlumnos_Materias();
+                Console.WriteLine("Materia modificada correctamente.");
+            }
+            else
+            {
+                Console.WriteLine("Error: No se encontró la materia con ese índice.");
+            }
+        }
+        static void MateriasActivas(bool activo)
+        {
+            var materiasActivas = activo ? alumnos.FindAll(m => m.EstaActiva) : alumnos.FindAll(m => !m.EstaActiva);
+
+            if (materiasActivas.Count == 0)
+            {
+                Console.WriteLine(activo ? "No hay Materias activas." : "No hay Materias inactivas.");
+                return;
+                
+            }
+
+                Console.WriteLine("Materias activas:");
+                foreach (var materia in materiasActivas)
+                {
+                    Console.WriteLine($"Indice: {materia.IndiceMateria}, Materia: {materia.NombreMateria}, EstaActiva: {materia.EstaActiva}");
+                }
+
+            Console.WriteLine("Escriba las notas de los 3 parciales para saber si Aprobaste o Desaprobaste");
+            Console.Write("Primer Parcial: ");
+            string nota1 = Console.ReadLine();
+            Console.Write("Segundo Parcial: ");
+            string nota2 = Console.ReadLine();
+            Console.Write("Tercer Parcial: ");
+            string nota3 = Console.ReadLine();
+            // Convierte las notas a números
+            double nota1Num = Convert.ToDouble(nota1);
+            double nota2Num = Convert.ToDouble(nota2);
+            double nota3Num = Convert.ToDouble(nota3);
+            // Calcula el promedio
+            double promedio = (nota1Num + nota2Num + nota3Num) / 3;
+
+                if (promedio > 7)
+                {
+                    Console.WriteLine($"Felicitaciones, has Aprobado la Materia con: {promedio}.");
+                }
+                else if (promedio < 7)
+                {
+                    Console.WriteLine("Lo siento has Desaprobado, tendrás que recursar.");
+                }
+                else if (promedio == 7)
+                {
+                    Console.WriteLine("Has aprobado por lo justo, tendrás que rendir final.");
+                }
+
+                int notaRedondeada = (int)Math.Round(promedio); // Redondea el promedio y lo convierte en entero
+                Alumno NotaAoB = new Alumno
+                {
+                    Nota = notaRedondeada,
+                    Estado = promedio >= 7
+                };
+                alumnos.Add(NotaAoB);
+            GuardarDatosMaterias();
+            GuardarDatosAlumnos_Materias();
+
+
+
+        }
+
+    }
+}
+
+
+
